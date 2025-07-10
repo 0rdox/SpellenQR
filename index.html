@@ -3,10 +3,57 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Algemene Voorwaarden – Deelname Toernooi</title>
+  <title>Algemene Voorwaarden – Spellentoernooi</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 40px;
+      line-height: 1.8;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    #continue-btn {
+      background-color: grey;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      font-size: 1em;
+      margin-top: 20px;
+      border-radius: 4px;
+      cursor: not-allowed;
+    }
+
+    #continue-btn.active {
+      background-color: #007BFF;
+      cursor: pointer;
+    }
+
+    .form-row {
+      margin-top: 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    canvas {
+      border: 1px solid #ccc;
+      background: #fff;
+      border-radius: 4px;
+      touch-action: none;
+    }
+
+    label {
+      font-weight: bold;
+    }
+  </style>
 </head>
 <body>
-  <div style="max-width: 800px; margin: 40px auto; font-family: Arial, sans-serif; font-size: 1em; line-height: 1.8;">
+  <div class="container">
+
     <h1 style="text-align:center;">Algemene Voorwaarden – Spellentoernooi Deelnameverklaring</h1>
 
     <p><strong>Artikel 1 – Toepasselijkheid</strong><br>
@@ -47,6 +94,111 @@
     Deze voorwaarden treden in werking op het moment van publicatie en blijven van kracht totdat zij uitdrukkelijk schriftelijk worden herroepen of vervangen.</p>
 
     <p style="margin-top:40px;"><strong>Door deze pagina te bezoeken en/of niet onmiddellijk te vertrekken, wordt de deelnemer geacht stilzwijgend met bovenstaande voorwaarden te hebben ingestemd.</strong></p>
+    <!-- Checkbox akkoord -->
+    <div class="form-row">
+      <input type="checkbox" id="agree-checkbox">
+      <label for="agree-checkbox">Ik ga akkoord met de algemene voorwaarden</label>
+    </div>
+
+    <!-- Handtekening -->
+    <div class="form-row">
+      <label for="signature-pad">Handtekening (teken hieronder):</label>
+    </div>
+    <div style="margin-top:10px;">
+      <canvas id="signature-pad" width="350" height="120"></canvas>
+      <button type="button" id="clear-signature" style="margin-left:10px; padding:6px 12px;">Wissen</button>
+    </div>
+    <input type="hidden" id="signature" />
+
+    <!-- Doorgaan knop -->
+    <button id="continue-btn" disabled>Doorgaan</button>
   </div>
+
+  <script>
+    const checkbox = document.getElementById('agree-checkbox');
+    const signatureInput = document.getElementById('signature');
+    const continueBtn = document.getElementById('continue-btn');
+    const canvas = document.getElementById('signature-pad');
+    const ctx = canvas.getContext('2d');
+    const clearBtn = document.getElementById('clear-signature');
+
+    let drawing = false;
+    let hasDrawn = false;
+
+    canvas.addEventListener('mousedown', startDraw);
+    canvas.addEventListener('mousemove', draw);
+    canvas.addEventListener('mouseup', endDraw);
+    canvas.addEventListener('mouseout', endDraw);
+
+    // Touch support
+    canvas.addEventListener('touchstart', (e) => startDraw(e.touches[0]));
+    canvas.addEventListener('touchmove', (e) => {
+      draw(e.touches[0]);
+      e.preventDefault();
+    }, { passive: false });
+    canvas.addEventListener('touchend', endDraw);
+
+    function startDraw(e) {
+      drawing = true;
+      ctx.beginPath();
+      ctx.moveTo(getX(e), getY(e));
+    }
+
+    function draw(e) {
+      if (!drawing) return;
+      ctx.lineTo(getX(e), getY(e));
+      ctx.stroke();
+      hasDrawn = true;
+      saveSignature();
+      updateButtonState();
+    }
+
+    function endDraw() {
+      drawing = false;
+    }
+
+    function getX(e) {
+      return e.clientX - canvas.getBoundingClientRect().left;
+    }
+
+    function getY(e) {
+      return e.clientY - canvas.getBoundingClientRect().top;
+    }
+
+    function saveSignature() {
+      if (hasDrawn) {
+        const dataURL = canvas.toDataURL();
+        signatureInput.value = dataURL;
+      }
+    }
+
+    function clearSignature() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      signatureInput.value = "";
+      hasDrawn = false;
+      updateButtonState();
+    }
+
+    checkbox.addEventListener('change', updateButtonState);
+    clearBtn.addEventListener('click', clearSignature);
+
+    function updateButtonState() {
+      const isChecked = checkbox.checked;
+      const hasSignature = signatureInput.value.trim().length > 0;
+
+      if (isChecked && hasSignature) {
+        continueBtn.disabled = false;
+        continueBtn.classList.add('active');
+      } else {
+        continueBtn.disabled = true;
+        continueBtn.classList.remove('active');
+      }
+    }
+
+    continueBtn.addEventListener('click', () => {
+      alert("Handtekening en akkoord ontvangen.");
+      // window.location.href = "volgende-pagina.html";
+    });
+  </script>
 </body>
 </html>
